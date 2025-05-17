@@ -30,3 +30,58 @@ Identify customers who have both a funded savings plan and a funded investment p
 
 **Result**:
 This query returns a list of users who have cross-product activity (savings + investment), sorted by how much total money they have in the system.
+
+### QUESTION 2 >> Transaction Frequency Analysis — SQL Solution
+
+## 📌 Objective
+The finance team wanted to segment customers based on how frequently they perform transactions monthly. The categories were:
+
+- **High Frequency**: ≥ 10 transactions/month
+- **Medium Frequency**: 3–9 transactions/month
+- **Low Frequency**: ≤ 2 transactions/month
+
+## 🧠 Approach
+
+To achieve this, I used a single SQL query with three Common Table Expressions (CTEs):
+
+---
+
+### 1️⃣ MonthlyTransactionCounts
+
+- I grouped all transactions by customer (`owner_id`) and by month using `DATE_FORMAT(transaction_date, '%Y-%m')`.
+- I used `COUNT(*)` to calculate how many times each customer transacted per month.
+
+---
+
+### 2️⃣ CustomerMonthlyAverages
+
+- From the first step, I calculated the **average monthly transactions** for each customer using `AVG(monthly_tx_count)`.
+
+---
+
+### 3️⃣ FrequencyCategorized
+
+- Based on the average per customer, I applied a `CASE` statement to label them into:
+  - **High Frequency** (≥10)
+  - **Medium Frequency** (3–9)
+  - **Low Frequency** (≤2)
+
+---
+
+### ✅ Final Aggregation
+
+- I grouped by frequency category and returned:
+  - `customer_count`: Total users in each group.
+  - `avg_transactions_per_month`: Average of averages (rounded to 1 decimal place).
+- I ordered the result using `FIELD()` to keep the expected order (High, Medium, Low).
+
+---
+
+## ⚠️ Problems I Encountered & Solved
+
+| Problem | How I Solved It |
+|--------|------------------|
+| Incorrect join to `plans_plan` table  | I realized `plans_plan` wasn't needed to compute transaction frequency. |
+| Wrong date formatting | I used `DATE_FORMAT(transaction_date, '%Y-%m')` to group monthly. |
+| Grouping logic | Initially grouped by full datetime, which gave wrong counts. Fixed by grouping per month. |
+| Decimal issues | Used `ROUND(..., 1)` for clean numeric presentation. |
