@@ -168,3 +168,60 @@ This tripped me up — I was filtering `DATEDIFF()` without considering that `MA
 4. **Time Formatting**  
 Checked the date format of `transaction_date` and `created_on` to ensure consistent comparison using `DATEDIFF(CURDATE(), ...)`.
 
+### QUESTION 4>>> 🧮 Customer Lifetime Value (CLV) Estimation - SQL Analysis
+## 📘 Scenario
+
+The marketing team wanted a simple but reliable way to estimate **Customer Lifetime Value (CLV)**.  
+The goal was to calculate how valuable each customer has been based on their transaction history and how long they’ve been active.
+
+I was asked to:
+- Calculate how many months a customer has had their account
+- Sum all their inflow transactions
+- Apply a given CLV formula to estimate value
+- Present this in a single SQL query, ordered by highest CLV
+
+---
+
+## 🎯 Objective
+
+The CLV formula I was given looked like this:
+
+CLV = (total_transactions / tenure_months) * 12 * avg_profit_per_transaction
+
+
+
+Where:
+- `total_transactions` is the sum of all **confirmed inflow** amounts
+- `tenure_months` is the number of months since the user signed up
+- `avg_profit_per_transaction` was given as 0.1%, or `0.001`
+
+---
+
+## 🔍 Tables Used
+
+### `users_customuser`
+- `id` → User ID
+- `first_name`, `last_name` → Used to build full name
+- `date_joined` → Used to calculate how long the account has been active
+
+### `savings_savingsaccount`
+- `owner_id` → Foreign key that links to `users_customuser.id`
+- `confirmed_amount` → Transaction inflow (in **kobo**)
+- `transaction_date` → When the transaction happened (not needed for this query)
+
+---
+
+## 🛠 Thought Process & Challenges
+
+### 🧠 Understanding the Metric
+
+At first, I had to sit with the CLV formula for a bit to fully understand it.  
+It was mixing **time** and **money**, which made me pause and break it down in plain English.
+
+I realized I needed to:
+- Get the customer’s **account tenure in months**, using `DATEDIFF` between today and `date_joined`, and then dividing by 30.
+- **Sum up all confirmed inflow amounts** — but not in kobo! I had to convert it to **naira** to make sense for real-world use.
+
+```sql
+SUM(s.confirmed_amount) / 100
+
